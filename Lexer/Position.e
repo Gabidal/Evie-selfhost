@@ -69,9 +69,9 @@ type Position
 		return New<Position>()->Postion.Position(Line, Character, Local, Absolute)
 	}
 
-    string ToString() 
-    {
-        #TODO: Add operator overload
-        #return (string(File_Name) + ":" + to_string(GetFriendlyLine()) + ":" + to_string(GetFriendlyCharacter()));
-    }
+    #string ToString() 
+    #{
+    #   TODO: Add operator overload
+    #   return (string(File_Name) + ":" + to_string(GetFriendlyLine()) + ":" + to_string(GetFriendlyCharacter()));
+    #}
 }

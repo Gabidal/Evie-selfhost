@@ -1,4 +1,4 @@
-use "../STD/STD.e"
+use "STD/STD.e"
 
 static Flags{
     long KEYWORD_COMPONENT = 1
