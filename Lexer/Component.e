@@ -1,10 +1,12 @@
+use "../STD/STD.e"
+
 type Component 
 {
-    string Value;
+    string Value
     vector<Component> Components
     Node ptr node = 0->(Node ptr)
     Position Location
-    long Flags;
+    long Flags
 
     func Component(string value, ling flags){
         Value = value
