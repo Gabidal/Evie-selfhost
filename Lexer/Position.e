@@ -1,5 +1,7 @@
 use "../STD/STD.e"
 
+use std
+
 type Position
 {
     int Line = 0

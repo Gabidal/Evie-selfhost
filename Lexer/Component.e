@@ -1,5 +1,7 @@
 use "../STD/STD.e"
 
+use std
+
 type Component 
 {
     string Value
@@ -8,7 +10,7 @@ type Component
     Position Location
     long Flags
 
-    func Component(string value, ling flags){
+    func Component(string value, long flags){
         Value = value
         Flags = flags
     }
