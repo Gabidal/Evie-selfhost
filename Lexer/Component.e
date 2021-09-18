@@ -1,21 +1,22 @@
 use "../STD/STD.e"
+use "Position.e"
 
 use std
 
 type Component 
 {
-    string Value
+    String Value
     vector<Component> Components
     Node ptr node = 0->(Node ptr)
     Position Location
     long Flags
 
-    func Component(string value, long flags){
+    func Component(String value, long flags){
         Value = value
         Flags = flags
     }
 
-    func Components(string value, Position pos, long flags){
+    func Components(String value, Position pos, long flags){
         Value = value
         Flags = flags
         Location = pos
