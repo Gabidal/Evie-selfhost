@@ -41,4 +41,8 @@ static std{
 			this.Array[i] = Tmp
 		}
 	}
+
+	int List<T>.Size(){
+		return Size
+	}
 }

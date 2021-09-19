@@ -72,7 +72,7 @@ public:
 
 	#for string or char lists
 	String string.string()
-	int Type = 0
+	long Type = 0
 	int Size = 0
 	bool Requires_Address = false	//for optimisation pusrposes.
 	int Memory_Offset = 0
@@ -158,22 +158,22 @@ public:
 	long Parsed_By = PARSED_BY.NONE
 	LABEL_TYPE Inline_Return_Label = LABEL_TYPE.NON
 
-	bool is(long long F) {
+	bool is(long F) {
 		if ((Parsed_By & F) == F){
 			return 1
 		}
 		return 0
 	}
 
-	bool is(int F) {
-		if (Type == F){
+	bool is(long F) {
+		if ((Type & F) == F){
 			return 1
 		}
 		return 0
 	}
 	
 	int is(String t) {
-		while (int i = 0; i < Inheritted.Size; i++)
+		while (int i = 0; i < Inheritted.Size(); i++)
 			if (t == Inheritted.At(i))
 				return i
 		return -1
@@ -181,7 +181,7 @@ public:
 
 	bool is(List<String> s) {
 		bool Is = true
-		while (int i = 0; i < s.Size; i++){
+		while (int i = 0; i < s.Size(); i++){
 			if (is(s.At(i)) == -1) {
 				Is = false;
 				jump End_Of_Loop
@@ -231,13 +231,13 @@ public:
 		#add the returning type
 		if (Skip_Return_Type == false){
 			while (int i = 0; i < Inheritted.Size; i++){
-				mname += "_" + i
+				mname.Append(Append("_", i))
 			}
 		}
-		mname += "_" + Name
+		mname.Append(Append("_", Name))
 
 		while (int i = 0; i < Parameters.Size; i++){
-			mname += "_" + i.Get_Inheritted("_", is(IMPORT), Skip_Prefixes)
+			mname.Append(Append("_", i.Get_Inheritted("_", is(IMPORT), Skip_Prefixes)))
 		}
 
 		return mname
@@ -245,7 +245,7 @@ public:
 
 	String Un_Mangle(Node ptr n) {
 		String Result;
-		for (int s = 0; s < n.Inheritted.Size; s++){
+		for (int s = 0; s < n.Inheritted.Size(); s++){
 			Result += n.Inheritted.At(s) + " "
 		}
 		Result += n->Name + "("
@@ -423,23 +423,15 @@ public:
 		return Find(n, this)
 	}
 
-	Node* Find_Scope(Node* n)
-
-	Node* Find(Position& location)
-
-	bool Compare_Fetchers(Node* other)
-
-	vector<Node*> Get_All_Fetchers()
-
-	Node* Get_Scope_As(int F, Node* Parent)
-
-	Node* Get_Scope_As(int F, vector<string> Inhritted, Node* Parent)
-
-	Node* Get_Context_As(int F, Node* Context)
-
-	Node* Get_Context_As(string n, Node* Context)
-
-	vector<Node*> Get_Scope_Path()
+	#Node* Find_Scope(Node* n)
+	#Node* Find(Position& location)
+	#bool Compare_Fetchers(Node* other)
+	#vector<Node*> Get_All_Fetchers()
+	#Node* Get_Scope_As(int F, Node* Parent)
+	#Node* Get_Scope_As(int F, vector<string> Inhritted, Node* Parent)
+	#Node* Get_Context_As(int F, Node* Context)
+	#Node* Get_Context_As(string n, Node* Context)
+	#vector<Node*> Get_Scope_Path()
 
 	Node* Get_Right_Parent() {
 		if (Fetcher != nullptr) {
@@ -451,16 +443,16 @@ public:
 	}
 
 	vector<string> Tree
-	//a.x.b.y
+	#a.x.b.y
 	Node* Get_Final_Fetcher(Node* n, int offset) {
 		Tree.push_back(n->Name)
 		if (n->Fetcher != nullptr) {
 			return Get_Final_Fetcher(n->Fetcher, offset)
 		}
 
-		//now got though the tree and find the right defined in the last that is inside of node* n.
+		#now got though the tree and find the right defined in the last that is inside of node* n.
 		reverse(Tree.begin(), Tree.end())
-		//a.x.b.y
+		#a.x.b.y
 		Node* Result = Find(Tree[0], n->Scope)
 
 		for (int i = 1; i < Tree.size() - offset; i++) {

@@ -42,4 +42,35 @@ static std{
 
 		return Result
 	}
+
+	bool Compare(String x, String y){
+		if (x.Size() != y.Size()){
+			return false
+		}
+		while (int i = 0; i < x.Size(); i++){
+			if (x.At(i) != y.At(i)){
+				return false
+			}
+		}
+		return true
+	}
+
+	#This append adds to the left side list and then returns it
+	String Append(String ptr x, String y){
+
+	}
+
+	#This append returns a new combined list
+	String Append(String x, String y){
+		String Result.String()
+
+		while (int i = 0; i < x.Size(); i++){
+			Result.Characters.Add(x.At(i))
+		}
+		while (int i = 0; i < y.Size(); i++){
+			Result.Characters.Add(y.At(i))
+		}
+
+		return Result
+	}
 }
