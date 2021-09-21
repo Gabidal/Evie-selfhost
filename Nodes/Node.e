@@ -198,8 +198,6 @@ public:
 		return 0
 	}
 
-	#int Calculate_Inheritted_Distance(Node* Val, Node* Loader, string type);
-
 	int Calculate_Inheritted_Distance(Node ptr Loader, String Type) {
 		return Calculate_Inheritted_Distance(this, Loader, Type)
 	}
@@ -209,7 +207,7 @@ public:
 			return true
 		}
 		while (int i = 0; i < Inheritted.Size; i++) {
-			if (Lexer.GetComponent(i).is(Flags.KEYWORD_COMPONENT))
+			if (Lexer.GetComponent(i).is(Flags.KEYWORD_COMPONENT) != false)
 				continue
 			bool Inheritted_templation = Find(i).Inherits_Template_Type()
 			if (Inheritted_templation == true) {
@@ -220,10 +218,6 @@ public:
 		return false
 	}
 	
-	#string Get_Inheritted(string seperator, bool Skip_Prefixes = false, bool Get_Name = false, bool skip_keywords = false);
-	
-	#vector<string> Get_Inheritted(bool Skip_Prefixes = false, bool Get_Name = false, bool Skip_Keywords = false);
-
 	String Get_Mangled_Name(bool Skip_Prefixes, bool Skip_Return_Type) {
 		#_int_ptr_Z6banana_int_int_short
 		String mname.String()
@@ -245,209 +239,125 @@ public:
 
 	String Un_Mangle(Node ptr n) {
 		String Result;
-		for (int s = 0; s < n.Inheritted.Size(); s++){
-			Result += n.Inheritted.At(s) + " "
+		while (int s = 0; s < n.Inheritted.Size(); s++){
+			Result.Append(Append(n.Inheritted.At(s), " "))
 		}
-		Result += n->Name + "("
-		for (int p = 0; p < n.Parameters.Size p++){
-			for (int s = 0; s < p.Inheritted.Size; s++){
-				Result += s + ", "
+		Result.Append(Append(n->Name, "("))
+		while (int p = 0; p < n.Parameters.Size p++){
+			while (int s = 0; s < p.Inheritted.Size; s++){
+				Result.Append(Append(s, ", "))
 			}
 		}
-		Result += ")\n"
+		Result.Append(")\n")
 
 		return Result
 	}
 	
-	//returns atm: Cpp, Evie
-	char ptr Get_Calling_Convention_Type(char ptr raw) {
-		if (raw[0] == '_') {
-			if (raw[1] == 'Z')
-				return "Cpp"
-			if (raw[1] == 'E')
-				return "Evie"
-		}
-		return "UNKNOWN"
-	}
+	#returns atm: Cpp, Evie
+	String Get_Calling_Convention_Type(String raw) {
+		String Result.String()
 
-	vector<Component> Un_Mangle(string raw) {
-		Component Function = Component("", Flags::TEXT_COMPONENT)
-		Component Parenthesis = Component("()", Flags::PAREHTHESIS_COMPONENT)
-		bool Func_Name = true
-		string Current
-		vector<Component> Current_Parameter_Inheritted
-		//type ptr new  type
-		if (raw[0] == '_' && raw[1] == 'Z') {
-			//C++ unmangler
-			//_Z3NEWi3ABC
-			for (int i = 2; i < raw.size(); i++) {
-				if		(raw[i] == 'P') {
-					Component ptr = Component("ptr", Flags::KEYWORD_COMPONENT)
-					Current_Parameter_Inheritted.push_back(ptr)
-					continue
-				}
-				else if (raw[i] == 'R') {
-					Component ref = Component("ref", Flags::KEYWORD_COMPONENT)
-					Current_Parameter_Inheritted.push_back(ref)
-					continue
-				}
-				else if (raw[i] == 'c') {
-					//because there is nothign defined yet we want to preserve these datas for later definition.
-					Component p = Component("1", Flags::NUMBER_COMPONENT)
-					p.Components = Current_Parameter_Inheritted
-					Current_Parameter_Inheritted.clear()
-					Parenthesis.Components.push_back(p)
-				}
-				else if (raw[i] == 's') {
-					Component p = Component("2", Flags::NUMBER_COMPONENT)
-					p.Components = Current_Parameter_Inheritted
-					Current_Parameter_Inheritted.clear()
-					Parenthesis.Components.push_back(p)
-				}
-				else if (raw[i] == 'f') {
-					Component p = Component("4", Flags::NUMBER_COMPONENT)
-					p.Components = Current_Parameter_Inheritted
-					Current_Parameter_Inheritted.clear()
-					Parenthesis.Components.push_back(p)
-				}
-				else if (raw[i] == 'i') {
-					Component p = Component("4", Flags::NUMBER_COMPONENT)
-					p.Components = Current_Parameter_Inheritted
-					Current_Parameter_Inheritted.clear()
-					Parenthesis.Components.push_back(p)
-				}
-				else if (raw[i] == 'd') {
-					Component p = Component("8", Flags::NUMBER_COMPONENT)
-					p.Components = Current_Parameter_Inheritted
-					Current_Parameter_Inheritted.clear()
-					Parenthesis.Components.push_back(p)
-				}
-
-				else if (((raw[i] >= 48) && (raw[i] <= 57))) {
-					string tmp = ""
-					tmp += raw[i]
-					for (int j = i + 1; j < raw.size(); j++) {
-						if (((raw[j] >= 48) && (raw[j] <= 57)))
-							tmp += (char)raw[j]
-						else
-							break
-					}
-					int size = atoi(tmp.c_str())
-					string name = ""
-					for (int j = i + (int)tmp.size(); (j < (size + i + 1)) && j < (int)raw.size(); j++) {
-						name += (char)raw[j]
-					}
-					if (Func_Name) {
-						Function.Value = name
-						Func_Name = false
-					}
-					else {
-						#class based parameters.
-						Component p = Component(name, Flags::TEXT_COMPONENT)
-						p.Components = Current_Parameter_Inheritted
-						Current_Parameter_Inheritted.clear()
-						Parenthesis.Components.push_back(p)
-					}
-					i += size
-				}
+		if (raw[0] == "_") {
+			if (raw[1] == "Z"){
+				Result.Set("Cpp")
+			}
+			else (raw[1] == "E"){
+				Result.Set("Evie")
 			}
 		}
-		#else if (raw[0] == '_' && raw[1] == 'E') {
-
-		#}
 		else {
-			#this lauches when no call type is identifyed.
-			Function.Value = raw
+			Result.Set("UNKNOWN")
 		}
-		vector<Component> Result = { Function, Parenthesis }
+
 		return Result
 	}
-	
-	#Node* Find(string name, Node* parent, bool Need_Parent_existance = true)
-	
-	#Node* Find(string name, Node* parent, int flags)
 
-	Node* Find(string name, Node* parent, vector<int> flags) {
-		for (auto flag : flags)
-			if (Find(name, parent, flag))
-				return Find(name, parent, flag)
-		return nullptr
+	Node ptr Find(String name, Node ptr scope, List<int> flags) {
+		while (int i = 0; i < flags.Size(); i++){
+			if (Find(name, scope, flags.At(i)) != 0->address){
+				return Find(name, scope, flag)
+			}
+		}
+		return 0->address
 	}
 	
-	Node* Find(int size, Node* parent, string f) {
+	Node ptr Find(int size, Node ptr scope, String f) {
 
-		for (Node* i : parent->Defined)
-			if (i->Size == size)
-				if (i->Format == f)
-					return i
+		while (int i = 0; i < scope.Defined.Size(); i++){
+			if (scope.Defined.At(i).Size == size){
+				if (scope.Defined.At(i).Format == f){
+					return scope.Defined.At(i)
+				}
+			}
+		}
 
-		for (Node* i : parent->Inlined_Items)
-			if (i->Size == size)
-				if (i->Format == f)
-					return i
+		while (int i = 0; i < scope.Inlined_Items.Size(); i++){
+			if (scope.Inlined_Items.At(i).Size == size){
+				if (scope.Inlined_Items.At(i).Format == f){
+					return scope.Defined.At(i)
+				}
+			}
+		}
 
-		if (parent->Scope != nullptr)
-			return Find(size, parent->Scope, f);
-		return nullptr
+		if (scope.Scope != 0->address)
+			return Find(size, scope.Scope, f);
+
+		return 0->address
 	}	
 
-	Node* Find(int size, Node* parent, int flags, string f) {
+	Node ptr Find(int size, Node ptr scope, int flags, String f) {
 
-		for (Node* i : parent->Defined)
-			if (i->is(flags) && (i->Size == size))
-				if (i->Format == f)
-					return i
+		while (int i = 0; i < scope.Defined.Size(); i++){
+			if (scope.Defined.At(i).is(flags) && (scope.Defined.At(i).Size == size)){
+				if (scope.Defined.At(i).Format == f){
+					return scope.Defined.At(i)
+				}
+			}
+		}
 
-		for (Node* i : parent->Inlined_Items)
-			if (i->is(flags) && (i->Size == size))
-				if (i->Format == f)
-					return i
+		while (Node* i : scope.Inlined_Items){
+			if (i->is(flags) && (i->Size == size)){
+				if (i->Format == f){
+					return scope.Defined.At(i)
+				}
+			}
+		}
 
-		if (parent->Scope != nullptr)
-			return Find(size, parent->Scope, flags, f);
-		return nullptr
+		if (scope.Scope != 0->address){
+			return Find(size, scope.Scope, flags, f)
+		}
+		return 0->address
 	}
 
-	#Node* Find(Node* n, Node* p);
-
-	#Node* Find(Node* n, Node* p, int f);
-
-	Node* Find(Node* n, Node* p, vector<int> f) {
-		for (auto flag : f)
-			if (Find(n, p, flag))
-				return Find(n, p, flag)
-		return nullptr
+	Node ptr Find(Node ptr n, Node ptr s, List<int> f) {
+		while (int i = 0; i < f.Size(); i++){
+			if (Find(n, s, f.At(i))){
+				return Find(n, s, f.At(i))
+			}
+		}
+		return 0->address
 	}
 
-	Node* Find(string n) {
+	Node ptr Find(String n) {
 		return Find(n, this)
 	}
 
-	#Node* Find_Scope(Node* n)
-	#Node* Find(Position& location)
-	#bool Compare_Fetchers(Node* other)
-	#vector<Node*> Get_All_Fetchers()
-	#Node* Get_Scope_As(int F, Node* Parent)
-	#Node* Get_Scope_As(int F, vector<string> Inhritted, Node* Parent)
-	#Node* Get_Context_As(int F, Node* Context)
-	#Node* Get_Context_As(string n, Node* Context)
-	#vector<Node*> Get_Scope_Path()
-
-	Node* Get_Right_Parent() {
-		if (Fetcher != nullptr) {
-			return Get_Final_Fetcher(this , 1)
+	Node ptr Get_Right_Parent() {
+		if (Fetcher != 0->address) {
+			return Get_Final_Fetcher(this, 1)
 		}
 		else {
 			return Scope
 		}
 	}
 
-	vector<string> Tree
+	#TODO: make a exe initter function that starts in the start of the executable.
+	List<String> Tree
 	#a.x.b.y
-	Node* Get_Final_Fetcher(Node* n, int offset) {
-		Tree.push_back(n->Name)
-		if (n->Fetcher != nullptr) {
-			return Get_Final_Fetcher(n->Fetcher, offset)
+	Node ptr Get_Final_Fetcher(Node ptr n, int offset) {
+		Tree.push_back(n.Name)
+		if (n.Fetcher != 0->address) {
+			return Get_Final_Fetcher(n.Fetcher, offset)
 		}
 
 		#now got though the tree and find the right defined in the last that is inside of node* n.

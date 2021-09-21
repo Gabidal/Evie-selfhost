@@ -57,7 +57,7 @@ static std{
 
 	#This append adds to the left side list and then returns it
 	String Append(String ptr x, String y){
-
+		
 	}
 
 	#This append returns a new combined list
@@ -73,4 +73,15 @@ static std{
 
 		return Result
 	}
+
+	String String.Set(String value){
+		this.Characters.Resize(Max(this.Size, value.Size()))
+		Memcpy(this.Characters.Array[i], value.Characters.Array, value.Size())
+	}
+
+	String String.Set(char ptr value){
+		this.Characters.Resize(Max(this.Size, value.Size()))
+		Memcpy(this.Characters.Array, value, value.Size())
+	}
+
 }

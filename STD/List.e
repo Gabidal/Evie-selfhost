@@ -11,7 +11,7 @@ static std{
 			Capacity = Size * 2
 			T ptr tmp = Allocate<T>(Capacity)
 
-			memcpy<int>(tmp, Array, Size * T.size)
+			memcpy<T>(tmp, Array, Size)
 
 			#deallocate(Array)
 
@@ -44,5 +44,25 @@ static std{
 
 	int List<T>.Size(){
 		return Size
+	}
+
+	func List<T>.Resize<T>(int New_Size){
+		if (Size >= New_Size){
+			return
+		}
+
+		T ptr tmp = Allocate<T>(New_Size)
+
+		memcpy<T>(tmp, Array, Size)
+
+		Array = tmp
+
+		Capacity = New_Size
+		Size = New_Size
+	}
+
+	func List<T>.Reverse<T>(){
+		List<T> Result.List<T>()
+		
 	}
 }
