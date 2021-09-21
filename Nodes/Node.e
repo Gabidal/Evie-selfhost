@@ -361,7 +361,7 @@ public:
 		}
 
 		#now got though the tree and find the right defined in the last that is inside of node* n.
-		reverse(Tree.begin(), Tree.end())
+		Tree = Tree.reverse()
 		#a.x.b.y
 		Node* Result = Find(Tree[0], n->Scope)
 

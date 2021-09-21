@@ -61,8 +61,18 @@ static std{
 		Size = New_Size
 	}
 
-	func List<T>.Reverse<T>(){
-		List<T> Result.List<T>()
+	List<T> ptr List<T>.Reverse<T>(){
+		List<T> ptr Result = New<List<T>>.List<T>()
+		Result.Resize(this.Size())
 		
+		while (int i = 0; i < this.Size(); i++){
+			Result.Set(i, this.At(this.Size() -1 - i))
+		}
+
+		return Result
+	}
+
+	func List<T>Set<T>(int i, T data){
+		this.Array[i] = data
 	}
 }
