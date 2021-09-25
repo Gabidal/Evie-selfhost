@@ -1,14 +1,11 @@
-#include <string>
-#include <vector>
-#include <iostream>
-#include <regex>
-
 use "../STD/STD.e"
 
 use "../Lexer/Component.e"
 use "../Lexer/Position.e"
+use "../Flags.e"
 
 use std
+use Node_Type
 
 type Variable_Descriptor {
 	int Define_Index = 0
@@ -17,50 +14,24 @@ type Variable_Descriptor {
 	Variable_Descriptor(Node ptr v, int i, List<Node ptr> source)
 }
 
-static PARSED_BY {
-	long NONE								= 1 < 0
-	long PREPROSESSOR						= 1 < 1
-	long PARSER								= 1 < 2
-	long POSTPROSESSOR						= 1 < 3
-	long ALGEBRA							= 1 < 4
-	long SAFE								= 1 < 5
-	long IRGENERATOR						= 1 < 6
-	long IRPOSTPROSESSOR					= 1 < 7
-	long BACKEND							= 1 < 8
-
-	long DESTRUCTOR_CALLER					= 1 < 9
-	long REFERENCE_COUNT_INCREASE			= 1 < 10
-	long MEMBER_FUNCTION_DEFINED_INSIDE		= 1 < 11
-	long FUNCTION_PROSESSOR					= 1 < 12
-	long THIS_AND_DOT_INSERTER				= 1 < 13
-
-}
-
-static LABEL_TYPE {
-	NON										= 1
-	RETURN_LABEL							= 2
-	CAN_MODIFY_ID							= 3
-}
-
 type Node {
-public:
-	Node(int flag, Position ptr p) {
+	func Node(int flag, Position ptr p) {
 		Type = flag
 		Location = p
 	}
-	Node(int flag, Position ptr p, String f){
+	func Node(int flag, Position ptr p, String f){
 		Type = flag
 		Location p
 		Format = f
 	}
-	Node(String n, Position ptr p){
+	func Node(String n, Position ptr p){
 		Name = n
 		Location = p
 	}
-	Node(int flag, String n, Position ptr p){
+	func Node(int flag, String n, Position ptr p){
 		Type = flag
 	}
-	Node(Node ptr n, int f) {
+	func Node(Node ptr n, int f) {
 		this = Copy_Node(n, n.Scope)
 		Type = f
 	}
@@ -69,31 +40,33 @@ public:
 	Position ptr Location = nullptr
 	String Name.string()
 	String Comment.string()
+	Node ptr Scope = 0->address
+	long Type = 0
+	int Size = 0
+	int Memory_Offset = 0
+	bool Requires_Address = false	#for optimisation pusrposes.
+	List<String> Inheritted.List<String>()
 
 	#for string or char lists
 	String string.string()
-	long Type = 0
-	int Size = 0
-	bool Requires_Address = false	//for optimisation pusrposes.
-	int Memory_Offset = 0
-	List<String> Inheritted
-	List<Node ptr> Templates
-	List<Node ptr> Inheritable_templates
-	List<Component> Template_Children
-	Node ptr Scope = 0->address
+
+	#Template features
+	List<Node ptr> Templates.List<Node ptr>()
+	List<Node ptr> Inheritable_templates.List<Node ptr>()
+	List<Component> Template_Children.List<Component>()
 
 	#funciton inlining features
-	List<Node ptr> Header
+	List<Node ptr> Header.List<Node ptr>()
 
 	#Scope features
-	List<Node ptr> Defined
-	List<Node ptr> Childs
-	List<Node ptr> Member_Functions
-	List<Node ptr> Operator_Overloads
+	List<Node ptr> Defined.List<Node ptr>()
+	List<Node ptr> Childs.List<Node ptr>()
+	List<Node ptr> Member_Functions.List<Node ptr>()
+	List<Node ptr> Operator_Overloads.List<Node ptr>()
 	int Call_Space_Start_Address = 0
 
 	#namespace inlining features
-	List<Node ptr> Inlined_Items
+	List<Node ptr> Inlined_Items.List<Node ptr>()
 
 	#for maximus parametrus usagus.
 	int Size_of_Call_Space = 0
@@ -102,11 +75,11 @@ public:
 	int Local_Allocation_Space = 0
 
 	#function features
-	List<Node ptr> Parameters
+	List<Node ptr> Parameters.List<Node ptr>()
 	String Mangled_Name.String()
 	
 	#Import features
-	List<Node ptr> Numerical_Return_Types
+	List<Node ptr> Numerical_Return_Types.List<Node ptr>()
 
 	#operator features
 	Node ptr Context = 0->address
@@ -206,7 +179,7 @@ public:
 		if (Is_Template_Object){
 			return true
 		}
-		while (int i = 0; i < Inheritted.Size; i++) {
+		while (int i = 0; i < Inheritted.Size(); i++) {
 			if (Lexer.GetComponent(i).is(Flags.KEYWORD_COMPONENT) != false)
 				continue
 			bool Inheritted_templation = Find(i).Inherits_Template_Type()
@@ -224,13 +197,13 @@ public:
 
 		#add the returning type
 		if (Skip_Return_Type == false){
-			while (int i = 0; i < Inheritted.Size; i++){
+			while (int i = 0; i < Inheritted.Size(); i++){
 				mname.Append(Append("_", i))
 			}
 		}
 		mname.Append(Append("_", Name))
 
-		while (int i = 0; i < Parameters.Size; i++){
+		while (int i = 0; i < Parameters.Size(); i++){
 			mname.Append(Append("_", i.Get_Inheritted("_", is(IMPORT), Skip_Prefixes)))
 		}
 
@@ -361,274 +334,232 @@ public:
 		}
 
 		#now got though the tree and find the right defined in the last that is inside of node* n.
-		Tree = Tree.reverse()
+		Tree = Tree.Reverse()
 		#a.x.b.y
-		Node* Result = Find(Tree[0], n->Scope)
+		Node ptr Result = Find(Tree.At(0), n.Scope)
 
 		for (int i = 1; i < Tree.size() - offset; i++) {
-			Result = Find(Tree[i], Result)
+			Result = Find(Tree.At(i), Result)
 		}
-		Tree.clear()
+		Tree.clean()
+
 		return Result
 	}
 
-	Node* Get_Most_Left(Node* n) {
-		if (n->Has({ OPERATOR_NODE, ASSIGN_OPERATOR_NODE, BIT_OPERATOR_NODE, CONDITION_OPERATOR_NODE, ARRAY_NODE }))
-			return Get_Most_Left(n->Left)
+	Node ptr Get_Most_Left(Node ptr n) {
+		if (n.Has(OPERATOR_NODE | ASSIGN_OPERATOR_NODE | BIT_OPERATOR_NODE | CONDITION_OPERATOR_NODE | ARRAY_NODE) == true)
+			return Get_Most_Left(n.Left)
 		return n
-	}	
-	Node* Get_Most_Left() {
-		if (this->Has({ OPERATOR_NODE, ASSIGN_OPERATOR_NODE, BIT_OPERATOR_NODE, CONDITION_OPERATOR_NODE, ARRAY_NODE }))
-			return this->Left->Get_Most_Left()
+	}
+
+	Node ptr Get_Most_Left() {
+		if (this.Has(OPERATOR_NODE | ASSIGN_OPERATOR_NODE | BIT_OPERATOR_NODE | CONDITION_OPERATOR_NODE | ARRAY_NODE))
+			return this.Left.Get_Most_Left()
 		return this
 	}
 
-	Node* Get_Most_Right(Node* n) {
-		if (n->Has({ OPERATOR_NODE, ASSIGN_OPERATOR_NODE, BIT_OPERATOR_NODE, CONDITION_OPERATOR_NODE, ARRAY_NODE }))
-			return Get_Most_Right(n->Right)
+	Node ptr Get_Most_Right(Node ptr n) {
+		if (n.Has(OPERATOR_NODE | ASSIGN_OPERATOR_NODE | BIT_OPERATOR_NODE | CONDITION_OPERATOR_NODE | ARRAY_NODE))
+			return Get_Most_Right(n.Right)
 		return n
 	}
-	Node* Get_Most_Right() {
-		if (this->Has({ OPERATOR_NODE, ASSIGN_OPERATOR_NODE, BIT_OPERATOR_NODE, CONDITION_OPERATOR_NODE, ARRAY_NODE }))
+
+	Node ptr Get_Most_Right() {
+		if (this.Has(OPERATOR_NODE | ASSIGN_OPERATOR_NODE | BIT_OPERATOR_NODE | CONDITION_OPERATOR_NODE | ARRAY_NODE))
 			return this->Right->Get_Most_Right()
 		return this
 	}
 
-	bool Locate(string name, vector<Node*> list) {
-		for (Node* i : list)
-			if (i->Name == name)
+	bool Locate(String name, List<Node ptr> list) {
+		while (int i = 0; i < list.Size(); i++){
+			if (Compare(list.At(i).Name, name)){
 				return true
+			}
+		}
 		return false
 	}
 	
-	#void Get_Inheritted_Class_Members();
-	
-	void Get_Inheritted_Class_Members(string s) {
-			#if (s == ".")
-			#	return;
-			Node* inheritted = Find(s, Scope)
-			for (auto i : inheritted->Defined) {
-				//now insert the inheritted classes members
-				if (Locate(i->Name, Defined) != true)
-					//if this is already defined no luck trying to re defining the same variable twice :D
-					Defined.push_back(i)
+	func Get_Inheritted_Class_Members(String s) {
+		Node ptr inheritted = Find(s, Scope)
+		while (int i = 0; i < inheritted.Defined.Size(); i++) {
+			#now insert the inheritted classes members
+			if (Locate(i->Name, Defined) != true){
+				#if this is already defined no luck trying to re defining the same variable twice :D
+				Defined.push_back(i)
 			}
-	}
-	
-	#this reqiers that the other local variables inside this object are already having theyre own size!
-	#int Update_Size()
-
-	/*void Update_Size_By_Inheritted() {
-		if (Name == "size" && (is("const") != -1))
-			return
-		if (is(NUMBER_NODE))
-			return
-		Size = 0
-		for (string s : Inheritted) {
-			//there is no inheritable type that doesnt have enything init.
-			if (Lexer::GetComponent(s).is(Flags::KEYWORD_COMPONENT)) {
-				if (s == "ptr") {
-					//this is for function pointters.
-					//Size = _SYSTEM_BIT_SIZE_
-					Scaler = Size
-					Size = _SYSTEM_BIT_SIZE_
-				}
-				continue
-			}
-			Size += Find(s, Scope, true)->Size
 		}
 	}
-	void Update_Members_Size() {
-		if (Name == "size" && (is("const") != -1))
-			return
-		Size = 0
-		#this needs maybe revamping?
-		#decide between this forloop and inheritting the members that we inherit
-		for (string s : Inheritted) {
-			#there is no inheritable type that doesnt have enything init.
-			if (Lexer::GetComponent(s).is(Flags::KEYWORD_COMPONENT)) {
-				if (s == "func" || s == "ptr")
-					//this is for function pointters.
-					Size += _SYSTEM_BIT_SIZE_
-				continue
-			}
-			if (Find(s, Scope)->Defined[0]->Name == "size" && (Find(s, Scope)->Defined[0]->is("const") != -1)) {
-				//this is a preprossed size, take it!
-				Node* Inherit = Find(s, Scope, true)
-				Inherit->Update_Members_Size()
-				Size += Inherit->Size
-			}
-				#if this happends we this class will inherit the members of the inheritted.
-			else
-				#there we handle more complex inheritance instances.
-				Get_Inheritted_Class_Members(s)
-		}
-		for (Node* i : Defined) {
-			if (i->is(FUNCTION_NODE))
-				continue;
-			#now revaluate the all new and old defined variables.
-			i->Update_Members_Size()
-		}
-		#now apply those revaluated values into us.
-		Update_Size()
-	}*/
 
-	void Update_Local_Variable_Mem_Offsets() {
+	func Update_Local_Variable_Mem_Offsets() {
 		Local_Allocation_Space = 0
-		for (auto i : Defined) {
-			if (i->is(FUNCTION_NODE) || !i->Requires_Address || i->Is_Template_Object)
-				continue;
-			i->Memory_Offset = Local_Allocation_Space
-			Local_Allocation_Space += i->Size
-		}
-
-		for (auto i : Childs) {
-			for (auto j : i->Get_all({ IF_NODE, ELSE_IF_NODE, ELSE_NODE, WHILE_NODE })) {
-				j->Update_Local_Variable_Mem_Offsets(&Local_Allocation_Space)
-			}
-		}
-		return;
-	}
-
-	void Update_Local_Variable_Mem_Offsets(int* Current_Allocation_Space) {
-		for (auto i : Defined) {
-			if (i->is(FUNCTION_NODE) || (!i->Requires_Address && !i->Scope->is(OBJECT_DEFINTION_NODE)))
+		while (int i = 0; i < Defined.Size(); i++) {
+			if (Defined.At(i).is(FUNCTION_NODE) == true || Defined.At(i).Requires_Address == false || Defined.At(i).Is_Template_Object = true){
 				continue
-			i->Memory_Offset = *Current_Allocation_Space
-			*Current_Allocation_Space += i->Size
+			}
+			Defined.At(i).Memory_Offset = Local_Allocation_Space
+			Local_Allocation_Space += Defined.At(i).Size
 		}
 
-		for (auto i : Childs) {
-			for (auto j : i->Get_all({ IF_NODE, ELSE_IF_NODE, ELSE_NODE, WHILE_NODE })) {
-				j->Update_Local_Variable_Mem_Offsets(Current_Allocation_Space)
+		while (int i = 0; i < Childs.Size(); i++) {
+			List<Node ptr> tmp = Childs.At(i).Get_all(IF_NODE | ELSE_IF_NODE | ELSE_NODE | WHILE_NODE)
+			while (int j = 0; j < tmp.Size(); j++) {
+				tmp.At(j).Update_Local_Variable_Mem_Offsets(Local_Allocation_Space)
 			}
 		}
-		return;
 	}
 
-	void Update_Member_Variable_Offsets(Node* obj) {
+	func Update_Local_Variable_Mem_Offsets(int ptr Current_Allocation_Space) {
+		while (int i = 0; i < Defined.Size(); i++) {
+			if (Defined.At(i).is(FUNCTION_NODE) || ((Defined.At(i).Requires_Address == false && (Defined.At(i).Scope.is(OBJECT_DEFINTION_NODE) == false)){
+				continue
+			}
+			i.Memory_Offset = Current_Allocation_Space
+			Current_Allocation_Space += i.Size
+		}
+
+		while (int i = 0; i < Childs.Size(); i++) {
+			List<Node ptr> tmp = Childs.At(i).Get_all(IF_NODE | ELSE_IF_NODE | ELSE_NODE | WHILE_NODE)
+
+			while (int j = 0; j < tmp.Size(); j++) {
+				tmp.At(j).Update_Local_Variable_Mem_Offsets(Current_Allocation_Space)
+			}
+		}
+	}
+
+	func Update_Member_Variable_Offsets(Node ptr obj) {
 		int Current_Offset = 0
-		for (auto i : obj->Defined) {
-			if (i->is(FUNCTION_NODE))
+		while (int i = 0; i < obj.Defined.Size(); i++) {
+			if (obj.Defined.At(i).is(FUNCTION_NODE)){
 				continue
-
-			if (!obj->is(FUNCTION_NODE)) {
-				i->Memory_Offset = Current_Offset
-				Current_Offset += i->Get_Size()
 			}
 
-			if (i->Defined.size() > 0) {
-				Update_Member_Variable_Offsets(i)
+			if (obj.Defined.At(i).is(FUNCTION_NODE) == false) {
+				obj.Defined.At(i).Memory_Offset = Current_Offset
+				Current_Offset += obj.Defined.At(i).Get_Size()
+			}
+
+			if (obj.Defined.At(i).Defined.size() > 0) {
+				Update_Member_Variable_Offsets(obj.Defined.At(i))
 			}
 		}
 	}
 
-	#void Update_Defined_Stack_Offsets();
-
-	void Update_Format() {
-		if (this->is(NUMBER_NODE))
+	func Update_Format() {
+		if (this.is(NUMBER_NODE)){
 			return
-		if (this->is("const") != -1 && this->Name == "format")
+		}
+		if (this.is("const") != -1 && Compare(this.Name, "format")){
 			return
-		if (Is_Template_Object)
+		}
+		if (Is_Template_Object){
 			return
+		}
 		Format = "integer"
-		for (string s : Inheritted) {
-			//there is no inheritable type that doesnt have enything init.
-			if (Lexer::GetComponents(s)[0].is(Flags::KEYWORD_COMPONENT))
+		while (int i = 0; i < Inheritted.Size(); i++) {
+			#there is no inheritable type that doesnt have enything init.
+			if (Lexer.GetComponents(Inheritted.At(i)).At(0).is(Flags.KEYWORD_COMPONENT)){
 				continue
-			Node* t = Find(s, Scope, CLASS_NODE);
-			t->Update_Format()
-			if (t->Format == "integer")
-				Format = t->Get_Format()
-			if (t->Format != "integer")
-				Format = t->Format
+			}
+			Node ptr t = Find(Inheritted.At(i), Scope, CLASS_NODE)
+			t.Update_Format()
+
+			if (Compare(t.Format, "integer") == true){
+				Format = t.Get_Format()
+			}
+			if (Compare(t.Format, "integer") == false){
+				Format = t.Format
+			}
 		}
-		for (auto i : Defined) {
-			if (i->Name == "format" && i->is("const") != -1)
-				Format = i->Format
+		while (int i = 0; i < Defined.Size(); i++) {
+			if (Compare(Defined.At(i).Name, "format") == true && Defined.At(i).is("const") != -1){
+				Format = Defined.At(i).Format
+			}
 		}
 	}
 
-	#void Update_Inheritance();
-
-	#Node* Copy_Node(Node* What_Node, Node* p);
-
-	vector<Node*> Has(Node* n, int f)
+	List<Node ptr> ptr Has(Node ptr n, int f)
 	{
-		vector<Node*> Result
-		if (n->is(OPERATOR_NODE)) {
-			vector<Node*> left = Has(n->Left, f)
-			Result.insert(Result.end(), left.begin(), left.end())
+		List<Node ptr> ptr Result
+		if (n.is(OPERATOR_NODE)) {
+			List<Node ptr> ptr left = Has(n.Left, f)
+			Result.Append(left)
 
-			vector<Node*> right = Has(n->Right, f)
-			Result.insert(Result.end(), right.begin(), right.end())
+			vector<Node ptr> ptr right = Has(n.Right, f)
+			Result.insert(right)
 		}
 
-		else if (n->is(CONTENT_NODE)) {
-			for (Node* i : n->Childs)
-				if (i->is(f))
-					Result.push_back(i)
+		else (n.is(CONTENT_NODE)) {
+			while (int i = 0; i < n.Childs.Size(); i++){
+				if (Childs.At(i).is(f)){
+					Result.Add(Childs.At(i))
+				}
+			}
 		}
 
-		if (n->Fetcher != nullptr) {
-			vector<Node*> fetcher = Has(n->Fetcher, f)
-			Result.insert(Result.end(), fetcher.begin(), fetcher.end())
+		if (n.Fetcher != 0->address) {
+			List<Node ptr> ptr fetcher = Has(n.Fetcher, f)
+			Result.Append(fetcher)
 		}
 
-
-		/*
-		//this doesnt work dont use unless must!!
-		else if (n->is(CALL_NODE)) {
-			for (Node* i : n->Parameters)
-				if (i->is(f))
-					Result.push_back(i)
-		}*/
-
-		if (n->is(f))
-			Result.push_back(n)
+		if (n.is(f)){
+			Result.Add(n)
+		}
 
 		return Result
 	}
 
-	vector<Node*> Has(int f) {
+	List<Node ptr> Has(int f) {
 		return Has(this, f)
 	}
 
-	int Has(vector<string> s) {
-		for (int i = 0; i < s.size(); i++)
-			if (is(s[i]) != -1)
-				return is(s[i])
+	int Has(List<String> s) {
+		while (int i = 0; i < s.size(); i++){
+			if (is(s.At(i)) != -1){
+				return is(s.At(i))
+			}
+		}
 		return -1
 	}
 
-	bool Has(vector<int> s) {
-		for (int i = 0; i < s.size(); i++)
-			if (is(s[i]))
-				return is(s[i])
+	bool Has(List<int> s) {
+		while (int i = 0; i < s.size(); i++){
+			if (is(s.At(i))){
+				return is(s.At(i))
+			}
+		}
 		return false
 	}
 
-	static bool Has(vector<Node*> l, Node* n) {
-		for (auto i : l)
-			for (auto j : i->Has(n->Type))
-				if (i->Name == n->Name)
+	bool Has(List<Node ptr> l, Node ptr n) {
+		while (int i = 0; i < l.Size(); i++){
+
+			List<Node ptr> tmp = l.At(i).Has(n.Type)
+			while (int j = 0; j < tmp.Size(); j++){
+
+				if (Compare(tmp.At(j).Name, n.Name)){
 					return true
+				}
+			}
+		}
 		return false
 	}
 
-
-	#vector<Node*> Get_all(int f, vector<Node*> Trace);
-
-	vector<Node*> Get_all(int f = -1) {
-		return Get_all(f, vector<Node*>())
+	List<Node ptr> Get_all(){
+		List<Node ptr> tmp.List<Node ptr>()
+		return Get_all(-1, tmp)
 	}
 
-	vector<Node*> Get_all(vector<int> flags) {
-		vector<Node*> Result
-		for (auto i : flags) {
-			vector<Node*> tmp = Get_all(i)
-			Result.insert(Result.end(), tmp.begin(), tmp.end())
+	List<Node ptr> Get_all(int f) {
+		List<Node ptr> tmp.List<Node ptr>()
+		return Get_all(f, tmp)
+	}
+
+	List<Node ptr> Get_all(List<int> flags) {
+		List<Node ptr> Result.List<Node ptr>()
+
+		while (int i = 0; i < flags.Size(); i++) {
+			List<Node ptr> tmp = Get_all(flags.At(i))
+			Result.insert(tmp)
 		}
 		return Result
 	}
@@ -636,24 +567,18 @@ public:
 	# <summary>
 	# Gets amount of specified int the parameter from inheritance
 	# </summary>
-	int Get_All(string s) {
+	int Get_All(String s) {
 		int Result = 0
-		for (auto i : Inheritted)
-			if (i == s)
+		while (int i = 0; i < Inheritted.Size(); i++){
+			if (Compare(Inheritted.At(i), s)){
 				Result++
+			}
+		}
 		return Result
 	}
 
-	#static vector<Node*> Get_all(int f, vector<Node*> l) {
-	#	vector<Node*> Result;
-	#	for (Node* n : l)
-	#		if (n->is(f))
-	#			Result.push_back(n);
-	#	return Result;
-	#}
-
 	bool Is_Decimal() {
-		if (find(Name.begin(), Name.end(), '.') != Name.end()) {
+		if (Name.Find(".") != -1) {
 			return true
 		}
 		else {
@@ -665,66 +590,64 @@ public:
 		return Size
 	}
 
-	template<typename T>
-	vector<T>& Append(vector<T>& d, vector<T> s) {
-		for (int i = 0; i < s.size(); i++)
-			d.push_back(s[i])
-		return d
-	}
-
-	string Get_Format() {
-		for (auto i : Defined) {
-			if (i->Name == "format")
-				if (i->is("const") != -1)
-					return i->Format
+	String Get_Format() {
+		while (int i = 0; i < Defined.Size(); i++) {
+			if (Compare(Defined.At(i).Name, "format")){
+				if (Defined-At(i).is("const") != -1){
+					return i.Format
+				}
+			}
 		}
-		return "integer"
+
+		String Result.String()
+		Result.Set("integer")
+		return Result
 	}
 
 	#Gets other side of operator, or the callation parameter which it goes to.
-	Node* Get_Pair() {
-		if (Context->Has({ OPERATOR_NODE, ASSIGN_OPERATOR_NODE, BIT_OPERATOR_NODE, CONDITION_OPERATOR_NODE, ARRAY_NODE })) {
-			if (Context->Left == this) {
-				if (!Context->Right->Has({ OPERATOR_NODE, ASSIGN_OPERATOR_NODE, BIT_OPERATOR_NODE, CONDITION_OPERATOR_NODE, ARRAY_NODE }))
-					return Context->Right
-				else
-					return Context->Right->Get_Most_Left()
+	Node ptr Get_Pair() {
+		if (Context.Has(OPERATOR_NODE | ASSIGN_OPERATOR_NODE | BIT_OPERATOR_NODE | CONDITION_OPERATOR_NODE | ARRAY_NODE)) {
+			if (Context.Left == this) {
+				if (Context.Right.Has(OPERATOR_NODE | ASSIGN_OPERATOR_NODE | BIT_OPERATOR_NODE | CONDITION_OPERATOR_NODE | ARRAY_NODE) == false)
+					return Context.Right
+				else{
+					return Context.Right.Get_Most_Left()
+				}
 			}			
-			else if (Context->Right == this) {
-				if (!Context->Left->Has({ OPERATOR_NODE, ASSIGN_OPERATOR_NODE, BIT_OPERATOR_NODE, CONDITION_OPERATOR_NODE, ARRAY_NODE }))
-					return Context->Left
-				else
-					return Context->Left->Get_Most_Right()
+			else (Context.Right == this) {
+				if (Context.left.Has(OPERATOR_NODE | ASSIGN_OPERATOR_NODE | BIT_OPERATOR_NODE | CONDITION_OPERATOR_NODE | ARRAY_NODE) == false)
+					return Context.Left
+				else{
+					return Context.Left.Get_Most_Right()
+				}
 			}
 		}
-		else if (Context->is(CALL_NODE)) {
+		else (Context.is(CALL_NODE)) {
 			#get first the index of paramter this is in the callation
 			int Parameter_Index = 0
-			for (auto i : Context->Parameters) {
-				if (i == this)
+			while (int i = 0; i < Context.Parameters.Size(); i++) {
+				if (i == this){
 					break
+				}
 				Parameter_Index++
 			}
 
 			#return the representive Node from the Function implemetation's paramters
-			return Context->Function_Implementation->Parameters[Parameter_Index];
+			return Context.Function_Implementation.Parameters.At(Parameter_Index);
 		}
-		throw::runtime_error("ERROR!")
+		#throw::runtime_error("ERROR!")
 	}
 
-	#Transform all this A.B.C.D into D->C->B->A
-	void Transform_Dot_To_Fechering(Node* To)
-
-	string Construct_Template_Type_Name() {
-		if (Templates.size() == 0)
+	String Construct_Template_Type_Name() {
+		if (Templates.size() == 0){
 			return Name
-		string Result = "____" + Name + "_"
-		for (auto i : Templates)
-			Result += i->Construct_Template_Type_Name() + "_"
+		}
+		String Result.String()
+		Result = Append("____", Append(Name, "_"))
+
+		while (int i = 0; i < Templates.Size(); i++){
+			Result += Append(Templates.At(i).Construct_Template_Type_Name(), "_")
+		}
 		return Result
 	}
-
-	#Node* Get_Closest_Context(int Flags);
-
-	#void Clean();
 }

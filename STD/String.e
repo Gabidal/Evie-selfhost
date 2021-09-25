@@ -3,16 +3,20 @@ static std{
 		List<char> ptr Characters.List<char>()
 	}
 
+	func String.String(char ptr data){
+		this.Set(data)
+	}
+
 	int String.Size(){
 		return this.Characters.Size
 	}
 
 	char String.At(int i){
-		return this.Characters.At(i)
+		return this.First(i)
 	}
 
 	char ptr String.Value(){
-		return this.Characters.Array
+		return this.First()
 	}
 
 	String To_String(int x){
@@ -55,33 +59,42 @@ static std{
 		return true
 	}
 
+	bool Compare(char ptr x, String y){
+		String New_X.String(x)
+		return Compare(New_X, y)
+	}
+
+	bool Compare(String x, char ptr y){
+		return Compare(y, x)
+	}
+
 	#This append adds to the left side list and then returns it
-	String Append(String ptr x, String y){
-		
+	#Warning: this function modifies content of 'x'
+	func Append(String ptr x, String y){
+		x.Characters.Append(y)
 	}
 
 	#This append returns a new combined list
 	String Append(String x, String y){
-		String Result.String()
-
-		while (int i = 0; i < x.Size(); i++){
-			Result.Characters.Add(x.At(i))
-		}
-		while (int i = 0; i < y.Size(); i++){
-			Result.Characters.Add(y.At(i))
-		}
-
-		return Result
+		return Append<char>(x.Characters, y.Characters)
 	}
 
 	String String.Set(String value){
 		this.Characters.Resize(Max(this.Size, value.Size()))
-		Memcpy(this.Characters.Array[i], value.Characters.Array, value.Size())
+		Memcpy<char>(this.First(), value.First(), value.Size())
 	}
 
 	String String.Set(char ptr value){
 		this.Characters.Resize(Max(this.Size, value.Size()))
-		Memcpy(this.Characters.Array, value, value.Size())
+		Memcpy(this.First(), value, value.Size())
+	}
+
+	char ptr String.First(){
+		return this.Characters.First()
+	}
+	
+	char ptr String.Last(){
+		return this.Characters.Last()
 	}
 
 }

@@ -1,5 +1,17 @@
 type char{
 	size = 1
+
+	char At(int i){
+		return this[i]
+	}
+
+	#Usage: Must be a char ptr
+	int Size(){
+		int Result = 0
+		while(int i = 0; this[i] != 0; i++){}
+
+		return Result
+	}
 }
 
 type bool{
