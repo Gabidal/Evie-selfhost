@@ -1,4 +1,4 @@
-use "STD/STD.e"
+use "https://github.com/Gabidal/std/std.e"
 
 static Flags{
     long KEYWORD_COMPONENT = 1
@@ -31,13 +31,13 @@ static Node_Type {
 	long PTR_NODE 				 = 1 << 12
 	long NUMBER_NODE 			 = 1 << 13
 
-	long OPERATOR_NODE 			 = 1 <<	14		//classical operators like +-/*
+	long OPERATOR_NODE 			 = 1 <<	14		#classical operators like +-/*
 	long ASSIGN_OPERATOR_NODE 	 = 1 << 15
-	long CONDITION_OPERATOR_NODE = 1 << 16		//==, !=, <, >
-	long BIT_OPERATOR_NODE, 	 = 1 << 17		// &, |, ¤, <<, >>
+	long CONDITION_OPERATOR_NODE = 1 << 16		#==, !=, <, >
+	long BIT_OPERATOR_NODE, 	 = 1 << 17		# &, |, ¤, <<, >>
 	long LOGICAL_OPERATOR_NODE 	 = 1 << 18
-	long ARRAY_NODE,	 		 = 1 << 19		//a[1]
-	long NODE_CASTER, 			 = 1 << 20		//fruit x->banana.a
+	long ARRAY_NODE,	 		 = 1 << 19		#a[1]
+	long NODE_CASTER, 			 = 1 << 20		#fruit x->banana.a
 
 	long STRING_NODE 			 = 1 << 21
 	long CLASS_NODE 			 = 1 << 22

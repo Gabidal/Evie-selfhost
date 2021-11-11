@@ -1,4 +1,4 @@
-use "../STD/STD.e"
+use "https://github.com/Gabidal/std/std.e"
 use "Position.e"
 
 use std
@@ -6,9 +6,9 @@ use std
 type Component 
 {
     String Value
-    vector<Component> Components
-    Node ptr node = 0->(Node ptr)
-    Position Location
+    List<Component ptr> Components
+    #Node ptr node = 0->(Node ptr)
+    Position ptr Location
     long Flags
 
     func Component(String value, long flags){
@@ -16,20 +16,20 @@ type Component
         Flags = flags
     }
 
-    func Components(String value, Position pos, long flags){
+    func Components(String value, Position ptr pos, long flags){
         Value = value
         Flags = flags
         Location = pos
     }
     
-    bool is(long flag)
-    {
+    bool is(long flag){
         if ((Flags & flag) == flag){
             return 1
         }
         return 0
     }
-    bool Has(List<long> f) {
+
+    bool Has(List<long> ptr f) {
         bool Result = true
         while (int i = 0; i < f.Size; i++){
             if (is(f.At(i)) == false){
@@ -39,6 +39,7 @@ type Component
         }
         return Result
     }
+
     #List<Component ptr> Get_all() {
     #    use Flags
     #

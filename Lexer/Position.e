@@ -1,4 +1,4 @@
-use "../STD/STD.e"
+use "https://github.com/Gabidal/std/std.e"
 
 use std
 
@@ -10,11 +10,11 @@ type Position
     int Absolute = 0
     char ptr File_Name = 0->address
 
-    func Position(int line, int character, int local, abselute, char ptr file_name){
+    func Position(int line, int character, int local, int absolute, char ptr file_name){
         Line = line
         Character = character
         Local = local
-        Abselute = abselute
+        Absolute = absolute
         File_Name = file_name
     }
 
@@ -58,17 +58,23 @@ type Position
 		return this
     }
 
-    Position ptr NextCharacter()
-	{
+    Position ptr NextCharacter(){
 		Character++
 		Absolute++
         Local++
-		return this;
+		return this
+    }
+
+    Position ptr NextLocal(){
+        Character++
+        Absolute++
+        Local++
+        return this
 	}
 
     Position ptr Clone()
 	{
-		return New<Position>()->Postion.Position(Line, Character, Local, Absolute)
+		return (New<Position>()->(Position ptr)).Position(Line, Character, Local, Absolute, File_Name)
 	}
 
     #string ToString() 

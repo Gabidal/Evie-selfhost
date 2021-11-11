@@ -1,4 +1,4 @@
-use "../STD/STD.e"
+use "https://github.com/Gabidal/std/std.e"
 
 use "../Lexer/Component.e"
 use "../Lexer/Position.e"
@@ -38,7 +38,7 @@ type Node {
 
 	#Normal features
 	Position ptr Location = nullptr
-	String Name.string()
+	String Name.String()
 	String Comment.string()
 	Node ptr Scope = 0->address
 	long Type = 0
@@ -410,7 +410,7 @@ type Node {
 
 	func Update_Local_Variable_Mem_Offsets(int ptr Current_Allocation_Space) {
 		while (int i = 0; i < Defined.Size(); i++) {
-			if (Defined.At(i).is(FUNCTION_NODE) || ((Defined.At(i).Requires_Address == false && (Defined.At(i).Scope.is(OBJECT_DEFINTION_NODE) == false)){
+			if (Defined.At(i).is(FUNCTION_NODE) || (Defined.At(i).Requires_Address == false && (Defined.At(i).Scope.is(OBJECT_DEFINTION_NODE) == false))){
 				continue
 			}
 			i.Memory_Offset = Current_Allocation_Space
