@@ -16,7 +16,7 @@ type Component
         Flags = flags
     }
 
-    func Components(String value, Position ptr pos, long flags){
+    func Component(String value, Position ptr pos, long flags){
         Value = value
         Flags = flags
         Location = pos
@@ -31,7 +31,7 @@ type Component
 
     bool Has(List<long> ptr f) {
         bool Result = true
-        while (int i = 0; i < f.Size; i++){
+        while (int i = 0; i < f.Size(); i++){
             if (is(f.At(i)) == false){
                 Result = false
                 return Result
